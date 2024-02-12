@@ -1,4 +1,4 @@
-use micrograd::Value;
+use micrograd::{trace, Value};
 
 fn main() {
     let x1 = Value::of(2.0, "x1");
@@ -11,5 +11,5 @@ fn main() {
     let x1w1x2w2 = x1w1 + x2w2;
     let n = x1w1x2w2 + b;
     let o = n.tanh();
-    println!("{}", o);
+    trace(&o);
 }

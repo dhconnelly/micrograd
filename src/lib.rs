@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, rc::Rc};
+use std::{collections::HashSet, rc::Rc};
 
 pub struct Value {
     val: f64,
@@ -20,6 +20,21 @@ impl std::fmt::Display for Value {
 }
 
 pub struct ValueRef(Rc<Value>);
+
+pub fn trace(val: &ValueRef) {
+    fn trace(val: &ValueRef, v: &mut HashSet<String>, n: usize) {
+        if v.contains(&val.label) {
+            return;
+        }
+        v.insert(val.label.clone());
+        let padding = "|   ".repeat(n);
+        println!("{}{} : val = {}", padding, val.label, val.val);
+        for child in &val.prev {
+            trace(child, v, n + 1);
+        }
+    }
+    trace(val, &mut HashSet::new(), 0);
+}
 
 impl std::fmt::Display for ValueRef {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
