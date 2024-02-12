@@ -1,43 +1,66 @@
-// TODO: shouldn't take ownership of |prev|. clone? refs?
-#[derive(Clone)]
+use std::{borrow::BorrowMut, rc::Rc};
+
 pub struct Value {
     val: f64,
     label: String,
-    prev: Vec<Value>,
+    prev: Vec<ValueRef>,
 }
 
 impl Value {
-    pub fn of(val: f64, label: impl Into<String>) -> Value {
-        Value { val, label: label.into(), prev: Vec::new() }
+    pub fn of(val: f64, label: impl Into<String>) -> ValueRef {
+        let label = label.into();
+        ValueRef(Rc::new(Value { val, label, prev: Vec::new() }))
     }
+}
 
-    pub fn tanh(self) -> Value {
+impl std::fmt::Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Value(label='{}', val='{}')", self.label, self.val)
+    }
+}
+
+pub struct ValueRef(Rc<Value>);
+
+impl std::fmt::Display for ValueRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl std::ops::Deref for ValueRef {
+    type Target = Value;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl ValueRef {
+    pub fn tanh(self) -> ValueRef {
         let e2x = f64::exp(2.0 * self.val);
         let val = (e2x - 1.0) / (e2x + 1.0);
         let label = format!("tanh({})", self.label);
-        let mut result = Value::of(val, label);
-        result.prev = vec![self];
-        result
+        let prev = vec![self];
+        ValueRef(Rc::new(Value { val, label, prev }))
     }
 }
 
-impl std::ops::Mul for Value {
-    type Output = Value;
-    fn mul(self, rhs: Self) -> Self::Output {
-        let label = format!("{}*{}", self.label, rhs.label);
-        let mut prod = Value::of(self.val * rhs.val, label);
-        prod.prev = vec![self, rhs];
-        prod
-    }
-}
-
-impl std::ops::Add for Value {
-    type Output = Value;
-    fn add(self, rhs: Self) -> Self::Output {
+impl std::ops::Add for ValueRef {
+    type Output = ValueRef;
+    fn add(self, rhs: ValueRef) -> ValueRef {
+        let val = self.val + rhs.val;
         let label = format!("{} + {}", self.label, rhs.label);
-        let mut sum = Value::of(self.val + rhs.val, label);
-        sum.prev = vec![self, rhs];
-        sum
+        let prev = vec![self, rhs];
+        ValueRef(Rc::new(Value { val, label, prev }))
+    }
+}
+
+impl std::ops::Mul for ValueRef {
+    type Output = ValueRef;
+    fn mul(self, rhs: ValueRef) -> ValueRef {
+        let val = self.val * rhs.val;
+        let label = format!("{}*{}", self.label, rhs.label);
+        let prev = vec![self, rhs];
+        ValueRef(Rc::new(Value { val, label, prev }))
     }
 }
 
