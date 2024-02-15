@@ -21,12 +21,6 @@ struct ValueInternal {
     op: Op,
 }
 
-impl Into<Value> for ValueInternal {
-    fn into(self) -> Value {
-        Value(Rc::new(RefCell::new(self)))
-    }
-}
-
 impl std::fmt::Display for ValueInternal {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
@@ -73,7 +67,8 @@ impl Value {
     }
 
     fn with_op(val: f64, label: String, op: Op) -> Value {
-        ValueInternal { val, grad: 0.0, label, op }.into()
+        let val = ValueInternal { val, grad: 0.0, label, op };
+        Value(Rc::new(RefCell::new(val)))
     }
 
     pub fn tanh(&self) -> Value {
@@ -123,7 +118,7 @@ impl Value {
         self.0.borrow_mut().grad = 0.0;
     }
 
-    pub fn label<'a>(&'a self) -> Ref<'a, String> {
+    pub fn label(&self) -> Ref<'_, String> {
         Ref::map(self.0.borrow(), |r| &r.label)
     }
 

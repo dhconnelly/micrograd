@@ -6,10 +6,6 @@ a rust port of andrej karpathy's https://github.com/karpathy/micrograd
 
 an exercise while following along with https://www.youtube.com/watch?v=VMj-3S1tku0
 
-# who
-
-daniel connelly <dhconnelly@gmail.com> (https://dhconnelly.com)
-
 # example
 
 ```rust
@@ -19,8 +15,8 @@ fn train_mlp(xs: &[Tensor], ys: &Tensor, step: f64, iterations: usize) -> MLP {
     let mut nn = MLP::new(3, 4, vec![4, 1]);
     for i in 0..iterations {
         // forward pass
-        let ypred = flatten(nn.forward2(&xs));
-        let mut loss = rmse(&ypred, &ys);
+        let ypred = flatten(nn.forward2(xs));
+        let mut loss = rmse(&ypred, ys);
 
         // backward pass
         for mut p in nn.parameters() {
@@ -54,6 +50,10 @@ fn main() {
     println!("rmse: {}", rmse(&ypred, &ys).val());
 }
 ```
+
+# who
+
+daniel connelly <dhconnelly@gmail.com> (https://dhconnelly.com)
 
 # license
 

@@ -4,8 +4,8 @@ fn train_mlp(xs: &[Tensor], ys: &Tensor, step: f64, iterations: usize) -> MLP {
     let mut nn = MLP::new(3, 4, vec![4, 1]);
     for i in 0..iterations {
         // forward pass
-        let ypred = flatten(nn.forward2(&xs));
-        let mut loss = rmse(&ypred, &ys);
+        let ypred = flatten(nn.forward2(xs));
+        let mut loss = rmse(&ypred, ys);
 
         // backward pass
         for mut p in nn.parameters() {

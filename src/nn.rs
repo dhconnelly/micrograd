@@ -15,7 +15,7 @@ pub fn tensor(x: impl IntoIterator<Item = f64>) -> Tensor {
 }
 
 pub fn from_tensor(t: &Tensor) -> Vec<f64> {
-    t.into_iter().map(|v| v.val()).collect()
+    t.iter().map(|v| v.val()).collect()
 }
 
 pub fn flatten(xs: Vec<Tensor>) -> Tensor {
@@ -48,7 +48,7 @@ impl Neuron {
         let dot_product = x
             .iter()
             .zip(&self.w)
-            .map(|(xi, wi)| xi.mul(&wi))
+            .map(|(xi, wi)| xi.mul(wi))
             .fold(Value::of(0.0), |acc, comp| acc.add(&comp));
         let biased = dot_product.add(&self.b);
         biased.tanh()
