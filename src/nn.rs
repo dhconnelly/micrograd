@@ -10,6 +10,26 @@ fn random_value() -> Value {
 
 pub type Tensor = Vec<Value>;
 
+pub fn tensor(x: impl IntoIterator<Item = f64>) -> Tensor {
+    x.into_iter().map(Value::of).collect()
+}
+
+pub fn from_tensor(t: &Tensor) -> Vec<f64> {
+    t.into_iter().map(|v| v.val()).collect()
+}
+
+pub fn flatten(xs: Vec<Tensor>) -> Tensor {
+    xs.into_iter().map(|mut x| x.swap_remove(0)).collect()
+}
+
+pub fn rmse(ypred: &Tensor, ys: &Tensor) -> Value {
+    ypred
+        .iter()
+        .zip(ys.iter())
+        .map(|(yout, ygt)| yout.sub(ygt).pow(2.0))
+        .fold(Value::of(0.0), |acc, l| acc.add(&l))
+}
+
 #[derive(Debug)]
 pub struct Neuron {
     w: Vec<Value>,
@@ -34,7 +54,7 @@ impl Neuron {
         biased.tanh()
     }
 
-    pub fn parameters(&self) -> Vec<Value> {
+    pub fn parameters(&mut self) -> Vec<Value> {
         let mut params = self.w.clone();
         params.push(self.b.clone());
         params
@@ -58,8 +78,11 @@ impl Layer {
         self.neurons.iter().map(|n| n.forward(x)).collect()
     }
 
-    pub fn parameters(&self) -> Vec<Value> {
-        self.neurons.iter().flat_map(|n| n.parameters()).collect()
+    pub fn parameters(&mut self) -> Vec<Value> {
+        self.neurons
+            .iter_mut()
+            .flat_map(|n| n.parameters())
+            .collect()
     }
 }
 
@@ -88,8 +111,15 @@ impl MLP {
         x
     }
 
-    pub fn parameters(&self) -> Vec<Value> {
-        self.layers.iter().flat_map(|l| l.parameters()).collect()
+    pub fn forward2(&self, xs: &[Tensor]) -> Vec<Tensor> {
+        xs.iter().map(|x| self.forward(x)).collect()
+    }
+
+    pub fn parameters(&mut self) -> Vec<Value> {
+        self.layers
+            .iter_mut()
+            .flat_map(|l| l.parameters())
+            .collect()
     }
 }
 
@@ -109,14 +139,6 @@ mod test {
 
     fn predict(n: &MLP, xs: &Tensor2) -> Tensor {
         xs.iter().map(|x| n.forward(x)[0].clone()).collect()
-    }
-
-    fn rmse(ypred: &Tensor, ys: &Tensor) -> Value {
-        ypred
-            .iter()
-            .zip(ys.iter())
-            .map(|(yout, ygt)| yout.sub(ygt).pow(2.0))
-            .fold(Value::of(0.0), |acc, l| acc.add(&l))
     }
 
     fn train(n: &mut MLP, err: f64, step: f64, xs: &Tensor2, ys: &Tensor) {
